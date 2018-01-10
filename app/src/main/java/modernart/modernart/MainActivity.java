@@ -1,12 +1,20 @@
 package modernart.modernart;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.animation.ArgbEvaluator;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.content.Intent;
+
 
 import java.util.*;
 
@@ -24,10 +32,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        cells = new ArrayList<LinearLayout>();
-        destinationColors = new ArrayList<Integer>();
-        sourceColors = new ArrayList<Integer>();
+        setCells();
+        setColors();
+        setSeekBar();
+    }
 
+    private void setCells() {
+        cells = new ArrayList<LinearLayout>();
         cells.add((LinearLayout) findViewById(R.id.cell1));
         cells.add((LinearLayout) findViewById(R.id.cell2));
         cells.add((LinearLayout) findViewById(R.id.cell3));
@@ -38,16 +49,22 @@ public class MainActivity extends AppCompatActivity {
         cells.add((LinearLayout) findViewById(R.id.cell8));
         cells.add((LinearLayout) findViewById(R.id.cell9));
         cells.add((LinearLayout) findViewById(R.id.cell10));
+    }
+
+    private void setColors() {
+        destinationColors = new ArrayList<Integer>();
+        sourceColors = new ArrayList<Integer>();
+
+        Random rnd =  new Random();
+        Integer whiteCellIndex = rnd.nextInt(cells.size());
+        Integer greyCellIndex = rnd.nextInt(cells.size());
 
         for (int index = 0;  index < cells.size(); index++) {
-            Random rnd =  new Random();
-            int randomIfCellIsNonWhiteOrNonGrey = rnd.nextInt(10);
-
-            if (randomIfCellIsNonWhiteOrNonGrey < 1) {
+            if (whiteCellIndex == index) {
                 Integer whiteColor = Color.argb(255, 255, 255, 255);
                 sourceColors.add(whiteColor);
                 cells.get(index).setBackgroundColor(whiteColor);
-            } else if (randomIfCellIsNonWhiteOrNonGrey < 2) {
+            } else if (greyCellIndex == index) {
                 Integer whiteColor = Color.argb(255, 230, 230, 230);
                 sourceColors.add(whiteColor);
                 cells.get(index).setBackgroundColor(whiteColor);
@@ -59,41 +76,71 @@ public class MainActivity extends AppCompatActivity {
 
             Integer destinationColor = Color.argb(255, rnd.nextInt(256), rnd.nextInt(256), rnd.nextInt(256));
             destinationColors.add(destinationColor);
-
-
         }
+    }
 
+    private void setSeekBar() {
         seekBar = (SeekBar) findViewById(R.id.seekBar);
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-               @Override
-               public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                   for (int index = 0;  index < cells.size(); index++) {
-                       LinearLayout cell = cells.get(index);
-                       Integer destinationColor = destinationColors.get(index);
-                       Integer sourceColor = sourceColors.get(index);
+           @Override
+           public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+               for (int index = 0;  index < cells.size(); index++) {
+                   LinearLayout cell = cells.get(index);
+                   Integer destinationColor = destinationColors.get(index);
+                   Integer sourceColor = sourceColors.get(index);
 
-                       if (sourceColor == Color.argb(255, 255, 255, 255) ||
+                   if (sourceColor == Color.argb(255, 255, 255, 255) ||
                            sourceColor ==  Color.argb(255, 230, 230, 230)) {
-                           continue;
-                       }
-
-                       Integer destination = (Integer) new ArgbEvaluator().evaluate(0.01f * i, sourceColor, destinationColor);
-                       cell.setBackgroundColor(destination);
+                       continue;
                    }
-               }
 
-               @Override
-               public void onStartTrackingTouch(SeekBar seekBar) {
-
-               }
-
-               @Override
-               public void onStopTrackingTouch(SeekBar seekBar) {
-
+                   Integer destination = (Integer) new ArgbEvaluator().evaluate(0.01f * i, sourceColor, destinationColor);
+                   cell.setBackgroundColor(destination);
                }
            }
+
+           @Override
+           public void onStartTrackingTouch(SeekBar seekBar) {
+
+           }
+
+           @Override
+           public void onStopTrackingTouch(SeekBar seekBar) {
+
+           }
+       }
 
         );
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.activity_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    public boolean onOptionsItemSelected(MenuItem item) {
+        showMoreInformationDialog();
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void showMoreInformationDialog() {
+        AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
+        dialog.setMessage("Inspired by the works of artists such as Piet Mondrian and Ben Nicholson.\n\nClick below to know more.");
+        dialog.setPositiveButton("Visit MOMA", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.moma.org"));
+                startActivity(browserIntent);
+            }
+        })
+                .setNegativeButton("Not now", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+
+                    }
+                });
+        dialog.show();
+    }
 }
